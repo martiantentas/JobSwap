@@ -30,7 +30,7 @@ export function JobStack({ onSwipe }: JobStackProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[600px]">
+      <div className="flex items-center justify-center h-[560px] sm:h-[600px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
@@ -38,7 +38,7 @@ export function JobStack({ onSwipe }: JobStackProps) {
 
   if (currentIndex >= profiles.length) {
     return (
-      <div className="flex flex-col items-center justify-center h-[600px] text-center p-8">
+      <div className="flex flex-col items-center justify-center h-[560px] sm:h-[600px] text-center p-8">
         <div className="bg-indigo-50 p-6 rounded-full mb-4">
           <MapPin className="w-12 h-12 text-indigo-500" />
         </div>
@@ -49,27 +49,29 @@ export function JobStack({ onSwipe }: JobStackProps) {
   }
 
   return (
-    <div className="relative w-full max-w-sm mx-auto h-[600px]">
-      <AnimatePresence>
-        {profiles.slice(currentIndex, currentIndex + 2).reverse().map((profile, index) => (
-          <SwipeCard 
-            key={profile.id} 
-            profile={profile} 
-            isTop={index === 1 || profiles.length - currentIndex === 1}
-            onSwipe={handleSwipeInternal}
-          />
-        ))}
-      </AnimatePresence>
-      
+    <div className="flex flex-col items-center w-full gap-6">
+      <div className="relative w-full max-w-sm mx-auto h-[560px] sm:h-[600px]">
+        <AnimatePresence>
+          {profiles.slice(currentIndex, currentIndex + 2).reverse().map((profile, index) => (
+            <SwipeCard
+              key={profile.id}
+              profile={profile}
+              isTop={index === 1 || profiles.length - currentIndex === 1}
+              onSwipe={handleSwipeInternal}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+
       {/* Controls */}
-      <div className="absolute -bottom-20 left-0 right-0 flex justify-center gap-6">
-        <button 
+      <div className="flex justify-center gap-6">
+        <button
           onClick={() => handleSwipeInternal("left")}
           className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center text-rose-500 hover:scale-110 active:scale-95 transition-transform"
         >
           <X className="w-8 h-8" />
         </button>
-        <button 
+        <button
           onClick={() => handleSwipeInternal("right")}
           className="w-16 h-16 rounded-full bg-indigo-600 shadow-lg flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-transform"
         >
