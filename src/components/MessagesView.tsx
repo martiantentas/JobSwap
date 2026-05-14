@@ -53,7 +53,7 @@ export function MessagesView() {
   return (
     <div className="flex flex-1 min-h-0 w-full">
       {/* ── Conversation list ── */}
-      <div className={`${showChat ? "hidden md:flex" : "flex"} flex-col w-full md:w-72 lg:w-80 border-r border-gray-100 bg-white min-h-0 shrink-0`}>
+      <div className={`${showChat ? "hidden md:flex" : "flex"} flex-col w-full md:w-72 lg:w-80 xl:w-96 border-r border-gray-100 bg-white min-h-0 shrink-0`}>
         <div className="shrink-0 px-5 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">Messages</h2>
         </div>

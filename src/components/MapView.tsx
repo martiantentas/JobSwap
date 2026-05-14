@@ -1,64 +1,82 @@
-import React, { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useEffect, useRef } from "react";
+import maplibregl, { Map as MLMap, Marker, Popup } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { JobSwapProfile } from "../types";
 
-// City coordinates (Bay Area + major US cities)
 const CITY_COORDS: Record<string, [number, number]> = {
-  "San Francisco": [37.7749, -122.4194],
-  "San Jose": [37.3382, -121.8863],
-  "Oakland": [37.8044, -122.2712],
-  "Palo Alto": [37.4419, -122.1430],
-  "Mountain View": [37.3861, -122.0839],
-  "Berkeley": [37.8716, -122.2727],
-  "Sunnyvale": [37.3688, -122.0363],
-  "Santa Clara": [37.3541, -121.9552],
-  "Fremont": [37.5485, -121.9886],
-  "San Mateo": [37.5630, -122.3255],
-  "Redwood City": [37.4853, -122.2363],
-  "New York": [40.7128, -74.0060],
-  "Los Angeles": [34.0522, -118.2437],
-  "Seattle": [47.6062, -122.3321],
-  "Austin": [30.2672, -97.7431],
-  "Boston": [42.3601, -71.0589],
-  "Chicago": [41.8781, -87.6298],
+  "San Francisco": [-122.4194, 37.7749],
+  "San Jose":      [-121.8863, 37.3382],
+  "Oakland":       [-122.2712, 37.8044],
+  "Palo Alto":     [-122.1430, 37.4419],
+  "Mountain View": [-122.0839, 37.3861],
+  "Berkeley":      [-122.2727, 37.8716],
+  "Sunnyvale":     [-122.0363, 37.3688],
+  "Santa Clara":   [-121.9552, 37.3541],
+  "Fremont":       [-121.9886, 37.5485],
+  "San Mateo":     [-122.3255, 37.5630],
+  "Redwood City":  [-122.2363, 37.4853],
+  "New York":      [-74.0060, 40.7128],
+  "Los Angeles":   [-118.2437, 34.0522],
+  "Seattle":       [-122.3321, 47.6062],
+  "Austin":        [-97.7431, 30.2672],
+  "Boston":        [-71.0589, 42.3601],
+  "Chicago":       [-87.6298, 41.8781],
 };
 
-const DEFAULT_CENTER: [number, number] = [37.5630, -122.0700];
-const DEFAULT_ZOOM = 10;
+const DEFAULT_CENTER: [number, number] = [-122.0700, 37.5630];
+const DEFAULT_ZOOM = 9.5;
 
-function makeIcon(count: number, highlighted: boolean) {
+const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
+
+function buildMarkerEl(count: number, highlighted: boolean): HTMLDivElement {
+  const el = document.createElement("div");
   const bg = highlighted ? "#4f46e5" : "#1e293b";
-  const size = highlighted ? 40 : 36;
-  return L.divIcon({
-    className: "",
-    html: `<div style="
-      background:${bg};
-      color:white;
-      width:${size}px;
-      height:${size}px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:system-ui,sans-serif;
-      font-size:13px;
-      font-weight:700;
-      border:2.5px solid white;
-      box-shadow:0 2px 8px rgba(0,0,0,0.25);
-      transition:all .15s;
-    ">${count}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  });
+  const size = highlighted ? 42 : 36;
+  el.style.cssText = `
+    background:${bg};
+    color:white;
+    width:${size}px;
+    height:${size}px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:system-ui,sans-serif;
+    font-size:13px;
+    font-weight:700;
+    border:2.5px solid white;
+    box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    transition:all .15s;
+    cursor:pointer;
+  `;
+  el.textContent = String(count);
+  return el;
 }
 
-// Recenter map when profiles change
-function FlyTo({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => { map.flyTo(center, map.getZoom(), { duration: 0.8 }); }, [center[0], center[1]]);
-  return null;
+function buildPopupHTML(city: string, profiles: JobSwapProfile[]) {
+  const rows = profiles.map(p => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #f1f5f9;">
+      <img src="${p.picture}" alt="" style="width:24px;height:24px;border-radius:9999px;object-fit:cover;" />
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#0f172a;">${escapeHtml(p.name)}</div>
+        <div style="font-size:10px;color:#94a3b8;">${escapeHtml(p.role)}</div>
+      </div>
+    </div>
+  `).join("");
+  return `
+    <div style="min-width:160px;font-family:system-ui,sans-serif;">
+      <div style="font-weight:700;color:#0f172a;margin-bottom:2px;">${escapeHtml(city)}</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px;">
+        ${profiles.length} professional${profiles.length > 1 ? "s" : ""}
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]!));
 }
 
 interface MapViewProps {
@@ -68,63 +86,80 @@ interface MapViewProps {
 }
 
 export function MapView({ profiles, hoveredId, onHover }: MapViewProps) {
-  // Group profiles by workCity
-  const groups = profiles.reduce<Record<string, JobSwapProfile[]>>((acc, p) => {
-    if (CITY_COORDS[p.workCity]) {
-      acc[p.workCity] = [...(acc[p.workCity] ?? []), p];
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<MLMap | null>(null);
+  const markersRef = useRef<Marker[]>([]);
+
+  // Init map once
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: OPENFREEMAP_STYLE,
+      center: DEFAULT_CENTER,
+      zoom: DEFAULT_ZOOM,
+      attributionControl: { compact: true },
+    });
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
+    mapRef.current = map;
+
+    // Ensure proper sizing once the container has real dimensions
+    const ro = new ResizeObserver(() => map.resize());
+    ro.observe(containerRef.current);
+    const t = setTimeout(() => map.resize(), 200);
+
+    return () => {
+      clearTimeout(t);
+      ro.disconnect();
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Re-render markers when profiles or hover change
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove old markers
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    // Group by workCity
+    const groups: Record<string, JobSwapProfile[]> = {};
+    for (const p of profiles) {
+      if (!CITY_COORDS[p.workCity]) continue;
+      (groups[p.workCity] ||= []).push(p);
     }
-    return acc;
-  }, {});
 
-  // Find center: if hovered profile has known coords, fly there
-  const hoveredCity = profiles.find(p => p.id === hoveredId)?.workCity;
-  const center = (hoveredCity && CITY_COORDS[hoveredCity]) ? CITY_COORDS[hoveredCity] : DEFAULT_CENTER;
+    Object.entries(groups).forEach(([city, cityProfiles]) => {
+      const coords = CITY_COORDS[city];
+      const isHighlighted = cityProfiles.some(p => p.id === hoveredId);
+      const el = buildMarkerEl(cityProfiles.length, isHighlighted);
 
-  return (
-    <MapContainer
-      center={DEFAULT_CENTER}
-      zoom={DEFAULT_ZOOM}
-      style={{ height: "100%", width: "100%" }}
-      zoomControl
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-      />
+      const popup = new maplibregl.Popup({ offset: 22, closeButton: false })
+        .setHTML(buildPopupHTML(city, cityProfiles));
 
-      {hoveredId && <FlyTo center={center} />}
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(coords)
+        .setPopup(popup)
+        .addTo(map);
 
-      {Object.entries(groups).map(([city, cityProfiles]) => {
-        const coords = CITY_COORDS[city];
-        const isHighlighted = cityProfiles.some(p => p.id === hoveredId);
-        return (
-          <Marker
-            key={city}
-            position={coords}
-            icon={makeIcon(cityProfiles.length, isHighlighted)}
-            eventHandlers={{
-              mouseover: () => onHover(cityProfiles[0].id),
-              mouseout: () => onHover(null),
-            }}
-          >
-            <Popup>
-              <div className="min-w-[140px]">
-                <p className="font-bold text-gray-900 mb-1">{city}</p>
-                <p className="text-xs text-gray-500 mb-2">{cityProfiles.length} professional{cityProfiles.length > 1 ? "s" : ""}</p>
-                {cityProfiles.map(p => (
-                  <div key={p.id} className="flex items-center gap-2 py-1 border-t border-gray-100">
-                    <img src={p.picture} alt="" className="w-6 h-6 rounded-full" />
-                    <div>
-                      <p className="text-xs font-medium text-gray-900">{p.name}</p>
-                      <p className="text-[10px] text-gray-400">{p.role}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
-    </MapContainer>
-  );
+      el.addEventListener("mouseenter", () => onHover(cityProfiles[0].id));
+      el.addEventListener("mouseleave", () => onHover(null));
+
+      markersRef.current.push(marker);
+    });
+  }, [profiles, hoveredId]);
+
+  // Fly to hovered city
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !hoveredId) return;
+    const city = profiles.find(p => p.id === hoveredId)?.workCity;
+    if (!city || !CITY_COORDS[city]) return;
+    map.easeTo({ center: CITY_COORDS[city], duration: 600 });
+  }, [hoveredId, profiles]);
+
+  return <div ref={containerRef} className="w-full h-full" />;
 }

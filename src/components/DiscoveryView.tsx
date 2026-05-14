@@ -30,7 +30,7 @@ export function DiscoveryView({ onSwipe }: DiscoveryViewProps) {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>(DEFAULTS);
   const [sortBy, setSortBy] = useState<SortBy>("match");
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export function DiscoveryView({ onSwipe }: DiscoveryViewProps) {
   const hasActiveFilters = !!(activeFilterCount || filters.query);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full min-w-0 flex-1">
 
       {/* ── Search & filter bar ── */}
       <div className="shrink-0 bg-white border-b border-gray-100 px-4 pt-3 pb-2 space-y-2.5">
@@ -197,7 +197,7 @@ export function DiscoveryView({ onSwipe }: DiscoveryViewProps) {
             </select>
           </div>
           {/* View toggle */}
-          <div className="hidden sm:flex border border-gray-200 rounded-lg overflow-hidden">
+          <div className="flex border border-gray-200 rounded-lg overflow-hidden">
             <ViewBtn active={viewMode === "list"}  onClick={() => setViewMode("list")}  title="List view"><List className="w-3.5 h-3.5" /></ViewBtn>
             <ViewBtn active={viewMode === "split"} onClick={() => setViewMode("split")} title="Split view"><LayoutGrid className="w-3.5 h-3.5" /></ViewBtn>
             <ViewBtn active={viewMode === "map"}   onClick={() => setViewMode("map")}   title="Map view"><Map className="w-3.5 h-3.5" /></ViewBtn>
@@ -212,7 +212,7 @@ export function DiscoveryView({ onSwipe }: DiscoveryViewProps) {
         {viewMode !== "map" && (
           <div className={`flex flex-col min-h-0 ${
             viewMode === "split"
-              ? "w-full md:w-[400px] lg:w-[460px] shrink-0 border-r border-gray-200"
+              ? "w-full md:w-1/2 lg:w-[55%] xl:w-[50%] 2xl:w-[45%] md:shrink-0 md:border-r md:border-gray-200"
               : "flex-1"
           }`}>
             {loading ? (
@@ -230,8 +230,8 @@ export function DiscoveryView({ onSwipe }: DiscoveryViewProps) {
             ) : (
               <div className={`flex-1 overflow-y-auto p-4 ${
                 viewMode === "list"
-                  ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 content-start auto-rows-min"
-                  : "flex flex-col gap-3"
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 content-start auto-rows-min"
+                  : "grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3 content-start auto-rows-min"
               }`}>
                 {sorted.map(p => (
                   <JobCard
@@ -249,9 +249,9 @@ export function DiscoveryView({ onSwipe }: DiscoveryViewProps) {
           </div>
         )}
 
-        {/* Map panel */}
+        {/* Map panel — hidden on mobile when in split (only mobile map button shows it) */}
         {viewMode !== "list" && (
-          <div className="flex-1 min-h-0">
+          <div className={`flex-1 min-h-0 ${viewMode === "split" ? "hidden md:block" : ""}`}>
             <MapView profiles={sorted} hoveredId={hoveredId} onHover={setHoveredId} />
           </div>
         )}

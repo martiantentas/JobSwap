@@ -93,13 +93,13 @@ function AuthenticatedApp() {
 
         {/* Main area — full-height for discovery & messages, scrollable for profile */}
         {(currentView === "discovery" || isMessages) ? (
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-1 min-h-0 overflow-hidden pb-24 md:pb-0">
             {currentView === "discovery" && <DiscoveryView onSwipe={handleSwipe} />}
             {isMessages                  && <MessagesView />}
           </div>
         ) : (
-          <main className="flex-1 overflow-y-auto flex flex-col items-center pt-8 px-4 pb-32 md:pb-10">
-            <div className="w-full max-w-md lg:max-w-lg">
+          <main className="flex-1 overflow-y-auto flex flex-col items-center pt-8 px-4 sm:px-6 lg:px-8 pb-32 md:pb-10">
+            <div className="w-full max-w-md sm:max-w-xl lg:max-w-3xl xl:max-w-5xl">
               {currentView === "profile" && <ProfileView user={user} />}
             </div>
           </main>
@@ -314,9 +314,9 @@ function ProfileView({ user }: { user: JobSwapProfile }) {
 
   // ── Display mode ──
   return (
-    <div className="flex flex-col gap-5">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Header card */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center gap-3">
+      <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center gap-3 lg:self-start">
         <div className="relative">
           <img src={user.picture} className="w-24 h-24 rounded-full border-4 border-white shadow-lg" alt="" />
           <div className="absolute bottom-0 right-0 bg-indigo-600 p-1.5 rounded-full border-4 border-white">
@@ -336,6 +336,8 @@ function ProfileView({ user }: { user: JobSwapProfile }) {
         </button>
       </div>
 
+      {/* Right column wrapper */}
+      <div className="lg:col-span-2 flex flex-col gap-5">
       {/* Info grid */}
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-4">
         {/* Commute */}
@@ -400,6 +402,7 @@ function ProfileView({ user }: { user: JobSwapProfile }) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
